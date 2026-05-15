@@ -1,4 +1,5 @@
 import os
+import sys
 import subprocess
 from flask import Flask, render_template, request, redirect, url_for, session
 
@@ -27,7 +28,6 @@ def get_scripts():
     return sorted(scripts)
 
 
-# התחברות
 @app.route("/login", methods=["GET", "POST"])
 def login():
     error = ""
@@ -39,16 +39,12 @@ def login():
         if username == USERNAME and password == PASSWORD:
             session["logged_in"] = True
             return redirect(url_for("home"))
-        else:
-            error = "שם משתמש או סיסמה שגויים"
 
-    return render_template(
-        "login.html",
-        error=error
-    )
+        error = "שם משתמש או סיסמה שגויים"
+
+    return render_template("login.html", error=error)
 
 
-# התנתקות
 @app.route("/logout")
 def logout():
     session.clear()
@@ -57,8 +53,6 @@ def logout():
 
 @app.route("/", methods=["GET", "POST"])
 def home():
-
-    # אם לא מחובר → מסך התחברות
     if not session.get("logged_in"):
         return redirect(url_for("login"))
 
@@ -67,65 +61,46 @@ def home():
     if request.method == "POST":
         message = request.form["message"]
         times = int(request.form.get("times", 1))
-
         selected_scripts = request.form.getlist("scripts")
 
-        # main.py תמיד ראשון
         selected_scripts.insert(0, ALWAYS_RUN)
 
         outputs = []
 
         for i in range(times):
-
             for filename in selected_scripts:
-
-                path = os.path.join(
-                    SCRIPTS_FOLDER,
-                    filename
-                )
+                path = os.path.join(SCRIPTS_FOLDER, filename)
 
                 if not os.path.exists(path):
+                    outputs.append(f"===== {filename} =====\nשגיאה: הקובץ לא נמצא")
                     continue
 
                 try:
-
                     result = subprocess.run(
-                        ["py", path, message],
+                        [sys.executable, path, message],
                         capture_output=True,
                         text=True,
                         timeout=30
                     )
 
-                    output = (
-                        result.stdout
-                        if result.stdout
-                        else result.stderr
-                    )
+                    output = result.stdout if result.stdout else result.stderr
 
                     outputs.append(
                         f"===== {filename} =====\n{output}"
                     )
 
                 except Exception as e:
-
                     outputs.append(
                         f"===== {filename} =====\nשגיאה: {e}"
                     )
 
-            outputs.append(
-                f"\n✅ סבב {i+1} הצליח\n"
-            )
+            outputs.append(f"\n✅ סבב {i + 1} הסתיים\n")
 
         session["response"] = "\n".join(outputs)
 
-        return redirect(
-            url_for("home")
-        )
+        return redirect(url_for("home"))
 
-    response = session.pop(
-        "response",
-        ""
-    )
+    response = session.pop("response", "")
 
     return render_template(
         "index.html",
