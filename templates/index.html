@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Eli_System</title>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+}
+
+body{
+min-height:100vh;
+background:
+linear-gradient(rgba(0,0,0,.55),rgba(0,0,0,.65)),
+url("/static/background-desktop.png");
+
+background-size:cover;
+background-position:center;
+background-repeat:no-repeat;
+background-attachment:fixed;
+
+font-family:Arial,sans-serif;
+
+display:flex;
+justify-content:center;
+align-items:center;
+
+padding:20px;
+color:white;
+}
+
+.card{
+width:min(100%,520px);
+padding:25px;
+border-radius:30px;
+background:rgba(255,255,255,.08);
+backdrop-filter:blur(20px);
+border:1px solid rgba(255,255,255,.15);
+box-shadow:0 25px 70px rgba(0,0,0,.55);
+text-align:center;
+}
+
+.header{
+display:flex;
+justify-content:center;
+align-items:center;
+gap:15px;
+margin-bottom:15px;
+}
+
+.logo{
+font-size:34px;
+font-weight:bold;
+}
+
+#statusBox{
+display:flex;
+align-items:center;
+gap:8px;
+padding:8px 14px;
+border-radius:999px;
+background:rgba(255,255,255,.08);
+border:1px solid rgba(255,255,255,.12);
+font-size:13px;
+font-weight:bold;
+}
+
+#statusDot{
+width:12px;
+height:12px;
+border-radius:50%;
+background:#ef4444;
+box-shadow:0 0 15px #ef4444;
+transition:.3s;
+}
+
+.active{
+background:#22c55e!important;
+box-shadow:0 0 15px #22c55e!important;
+}
+
+.subtitle{
+font-size:14px;
+color:#d1d5db;
+line-height:1.8;
+margin-bottom:25px;
+}
+
+input{
+width:100%;
+padding:15px;
+margin-bottom:12px;
+border-radius:15px;
+background:rgba(255,255,255,.08);
+border:1px solid rgba(255,255,255,.1);
+outline:none;
+color:white;
+text-align:center;
+font-size:15px;
+}
+
+input::placeholder{
+color:#d1d5db;
+}
+
+.times-title{
+margin-top:10px;
+margin-bottom:10px;
+font-size:14px;
+font-weight:bold;
+}
+
+.premium-select-wrap{
+position:relative;
+margin-bottom:20px;
+}
+
+.premium-select-wrap select{
+width:100%;
+padding:16px;
+border-radius:15px;
+border:1px solid rgba(255,255,255,.15);
+outline:none;
+appearance:none;
+-webkit-appearance:none;
+-moz-appearance:none;
+cursor:pointer;
+font-size:16px;
+font-weight:bold;
+text-align:center;
+color:white;
+background:
+linear-gradient(
+145deg,
+rgba(255,255,255,.12),
+rgba(255,255,255,.05)
+);
+backdrop-filter:blur(15px);
+box-shadow:0 10px 25px rgba(0,0,0,.2);
+}
+
+.premium-select-wrap::after{
+content:"⌄";
+position:absolute;
+left:18px;
+top:50%;
+transform:translateY(-50%);
+font-size:22px;
+pointer-events:none;
+color:white;
+}
+
+.premium-select-wrap select option{
+background:#111827;
+color:white;
+}
+
+.scripts-title{
+margin-top:15px;
+margin-bottom:10px;
+font-size:14px;
+font-weight:bold;
+}
+
+#selectedCount{
+margin-bottom:15px;
+font-size:13px;
+color:#9ca3af;
+font-weight:bold;
+}
+
+.scripts-grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:10px;
+max-height:200px;
+overflow:auto;
+margin-bottom:20px;
+}
+
+.script-card{
+display:flex;
+align-items:center;
+justify-content:center;
+gap:10px;
+padding:12px;
+border-radius:16px;
+cursor:pointer;
+background:rgba(255,255,255,.07);
+border:1px solid rgba(255,255,255,.1);
+transition:.3s;
+}
+
+.script-card:hover{
+transform:translateY(-2px);
+background:rgba(255,255,255,.14);
+}
+
+.script-card input{
+display:none;
+}
+
+.checkmark{
+width:22px;
+height:22px;
+display:flex;
+justify-content:center;
+align-items:center;
+border-radius:50%;
+background:rgba(255,255,255,.1);
+color:transparent;
+transition:.3s;
+}
+
+.script-card input:checked + .checkmark{
+background:linear-gradient(135deg,#06b6d4,#2563eb);
+color:white;
+box-shadow:0 0 18px rgba(6,182,212,.7);
+}
+
+.selected{
+background:rgba(6,182,212,.14);
+border-color:#06b6d4;
+}
+
+button{
+width:100%;
+padding:16px;
+border:none;
+border-radius:15px;
+cursor:pointer;
+font-size:16px;
+font-weight:bold;
+color:white;
+background:linear-gradient(135deg,#2563eb,#06b6d4);
+transition:.3s;
+}
+
+button:hover:not(:disabled){
+transform:scale(1.02);
+}
+
+button:disabled{
+opacity:.6;
+cursor:not-allowed;
+}
+
+.progress-wrap{
+margin-top:15px;
+display:none;
+}
+
+.progress-text{
+font-size:13px;
+font-weight:bold;
+margin-bottom:8px;
+}
+
+.progress-bar{
+width:100%;
+height:12px;
+border-radius:999px;
+background:rgba(255,255,255,.12);
+overflow:hidden;
+border:1px solid rgba(255,255,255,.15);
+}
+
+.progress-fill{
+width:0%;
+height:100%;
+border-radius:999px;
+background:linear-gradient(135deg,#22c55e,#06b6d4,#2563eb);
+transition:width .3s ease;
+}
+
+.result{
+margin-top:20px;
+padding:18px;
+background:rgba(0,0,0,.3);
+border-radius:20px;
+border:1px solid rgba(255,255,255,.1);
+max-height:250px;
+overflow:auto;
+white-space:pre-wrap;
+line-height:1.7;
+}
+
+@media(max-width:768px){
+
+body{
+background:
+linear-gradient(rgba(0,0,0,.55),rgba(0,0,0,.65)),
+url("/static/background-mobile.png");
+
+background-size:cover;
+background-position:center;
+}
+
+.scripts-grid{
+grid-template-columns:1fr;
+}
+
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="card">
+
+<div class="header">
+<div class="logo">המערכת של אלי</div>
+
+<div id="statusBox">
+<div id="statusDot"></div>
+<span id="statusText">לא פעיל</span>
+</div>
+
+</div>
+
+<div class="subtitle">
+את מי נזיין היום?
+</div>
+
+<form
+method="POST"
+id="botForm"
+autocomplete="off"
+>
+
+<input
+type="tel"
+name="message"
+placeholder="?מי היעד"
+pattern="[0-9]{10}"
+autocomplete="new-password"
+autocorrect="off"
+autocapitalize="off"
+spellcheck="false"
+required
+>
+
+<div class="times-title">
+בחר כמות סבבים
+</div>
+
+<div class="premium-select-wrap">
+
+<select name="times">
+
+{% for i in range(1,21) %}
+<option value="{{i}}">
+{{i}}
+</option>
+{% endfor %}
+
+</select>
+
+</div>
+
+<div class="scripts-title">
+בחר מערכות
+</div>
+
+<div id="selectedCount">
+נבחרו: 0 מתוך {{ scripts|length }}
+</div>
+
+<div class="scripts-grid">
+
+{% for script in scripts %}
+
+<label class="script-card">
+
+<input
+type="checkbox"
+name="scripts"
+value="{{ script }}"
+checked
+>
+
+<span class="checkmark">✓</span>
+
+<span>
+{{ script.replace(".py","") }}
+</span>
+
+</label>
+
+{% endfor %}
+
+</div>
+
+<button id="submitBtn" type="submit">
+הפעל עכשיו
+</button>
+
+<div class="progress-wrap" id="progressWrap">
+
+<div class="progress-text" id="progressText">
+0%
+</div>
+
+<div class="progress-bar">
+<div class="progress-fill" id="progressFill"></div>
+</div>
+
+</div>
+
+</form>
+
+{% if response %}
+<div class="result">
+{{ response }}
+</div>
+{% endif %}
+
+</div>
+
+<script>
+const form=document.getElementById("botForm");
+const submitBtn=document.getElementById("submitBtn");
+const statusDot=document.getElementById("statusDot");
+const statusText=document.getElementById("statusText");
+const progressWrap=document.getElementById("progressWrap");
+const progressFill=document.getElementById("progressFill");
+const progressText=document.getElementById("progressText");
+const boxes=document.querySelectorAll('input[name="scripts"]');
+const cards=document.querySelectorAll(".script-card");
+const selectedCount=document.getElementById("selectedCount");
+
+let interval;
+
+function updateCounter(){
+
+const checked=
+document.querySelectorAll(
+'input[name="scripts"]:checked'
+);
+
+selectedCount.innerText=
+`נבחרו: ${checked.length} מתוך ${boxes.length}`;
+
+cards.forEach(card=>{
+
+const box=card.querySelector("input");
+
+card.classList.toggle(
+"selected",
+box.checked
+);
+
+});
+
+}
+
+boxes.forEach(box=>{
+box.addEventListener("change",updateCounter);
+});
+
+updateCounter();
+</script>
+
+</body>
+</html>
