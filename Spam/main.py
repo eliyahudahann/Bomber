@@ -52,8 +52,11 @@ def run_script(script_name, target_phone):
             print(f"[X] Error: {e}")
 
 def main():
+#    target_phone = input("Enter target phone number: ")
+    if len(sys.argv) > 1:
+    target_phone = sys.argv[1]
+else:
     target_phone = input("Enter target phone number: ")
-    
     threads = []
     for script in scripts:
         t = threading.Thread(target=run_script, args=(script, target_phone))
