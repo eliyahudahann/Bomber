@@ -29,7 +29,6 @@ def get_scripts():
             and not filename.startswith("._")
             and filename != ALWAYS_RUN
         ):
-
             scripts.append(filename)
 
     return sorted(scripts)
@@ -44,10 +43,11 @@ def run_script(filename, message):
 
     if not os.path.exists(path):
 
-        return (
-            f"===== {filename} =====\n"
-            f"שגיאה: הקובץ לא נמצא"
-        )
+        return {
+            "filename": filename,
+            "success": False,
+            "error": "הקובץ לא נמצא"
+        }
 
     try:
 
@@ -55,26 +55,44 @@ def run_script(filename, message):
             [sys.executable, path, message],
             capture_output=True,
             text=True,
-            timeout=30
+            timeout=120
         )
 
-        output = (
-            result.stdout
-            if result.stdout
-            else result.stderr
+        if result.returncode == 0:
+
+            return {
+                "filename": filename,
+                "success": True,
+                "error": ""
+            }
+
+        error = (
+            result.stderr.strip()
+            or result.stdout.strip()
+            or "שגיאה לא ידועה"
         )
 
-        return (
-            f"===== {filename} =====\n"
-            f"{output}"
-        )
+        return {
+            "filename": filename,
+            "success": False,
+            "error": error
+        }
+
+    except subprocess.TimeoutExpired:
+
+        return {
+            "filename": filename,
+            "success": False,
+            "error": "חריגה ממגבלת זמן (120 שניות)"
+        }
 
     except Exception as e:
 
-        return (
-            f"===== {filename} =====\n"
-            f"שגיאה: {e}"
-        )
+        return {
+            "filename": filename,
+            "success": False,
+            "error": str(e)
+        }
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -119,9 +137,7 @@ def logout():
 @app.route("/", methods=["GET", "POST"])
 def home():
 
-    if not session.get(
-        "logged_in"
-    ):
+    if not session.get("logged_in"):
 
         return redirect(
             url_for("login")
@@ -145,7 +161,6 @@ def home():
                 )
             )
 
-            # מקסימום 10 סבבים
             times = min(
                 max(times, 1),
                 10
@@ -162,7 +177,6 @@ def home():
         )
 
         # main.py תמיד מתווסף
-        # גם אם הוא כבר קיים
         selected_scripts.insert(
             0,
             ALWAYS_RUN
@@ -171,6 +185,8 @@ def home():
         outputs = []
 
         for i in range(times):
+
+            round_errors = []
 
             workers = min(
                 len(selected_scripts),
@@ -198,13 +214,39 @@ def home():
                     futures
                 ):
 
+                    result = future.result()
+
+                    if not result[
+                        "success"
+                    ]:
+
+                        round_errors.append(
+                            result
+                        )
+
+            if not round_errors:
+
+                outputs.append(
+                    f"✅ סבב {i+1} הסתיים בהצלחה"
+                )
+
+            else:
+
+                outputs.append(
+                    f"❌ סבב {i+1} הסתיים עם תקלות"
+                )
+
+                for error in round_errors:
+
                     outputs.append(
-                        future.result()
+                        f"\n📄 {error['filename']}"
                     )
 
-            outputs.append(
-                f"\n✅ סבב {i+1} הסתיים\n"
-            )
+                    outputs.append(
+                        f"תקלה: {error['error']}"
+                    )
+
+            outputs.append("")
 
         session[
             "response"
